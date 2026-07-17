@@ -8,6 +8,13 @@ import { HistoryEntry, GeneratePayload, SimilarityPayload, PossibilitiesPayload,
 import * as binStore from './bins/store';
 import { BinEntry } from './bins/types';
 import { renderBinsList, setUseInGeneratorCallback, setEditBinCallback, renderTrashedBinsList } from './components/renderBins';
+import {
+    calculateLuhn,
+    generateSyntheticBatch,
+    serializeBatch,
+    validateBatchOptions,
+    validateCardNumber,
+} from './utils/cardTools.js';
 
 type Theme = 'day' | 'night' | 'sparkle';
 type Country = 'Mexico' | 'United States';
@@ -41,10 +48,14 @@ let currentPurchaseRecord: SyntheticRecord | null = null;
 // --- CORE APP SETUP ---
 document.addEventListener('DOMContentLoaded', () => {
     // --- FEATURE SETUP ---
+    setupMotionPreference();
     setupControls();
     setupViewSwitcher();
     setupCopyButtons();
     setupDelegatedListeners();
+    setupValidator();
+    setupBatchGenerator();
+    setupKeyboardShortcuts();
     
     // --- GENERATOR LOGIC (MAIN) ---
     setupGenerator();
@@ -112,13 +123,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // --- FEATURE MODULES ---
 
+function setupMotionPreference() {
+    const toggle = document.getElementById('reduce-motion-toggle') as HTMLInputElement | null;
+    if (!toggle) return;
+
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const savedPreference = localStorage.getItem('reduceMotion');
+    const shouldReduce = savedPreference === null ? mediaQuery.matches : savedPreference === 'true';
+
+    const applyPreference = (enabled: boolean) => {
+        document.documentElement.classList.toggle('reduce-motion', enabled);
+        toggle.checked = enabled;
+    };
+
+    applyPreference(shouldReduce);
+    toggle.addEventListener('change', () => {
+        applyPreference(toggle.checked);
+        localStorage.setItem('reduceMotion', String(toggle.checked));
+    });
+}
+
 function setupControls() {
     const themeButtons = document.querySelectorAll('.theme-btn') as NodeListOf<HTMLButtonElement>;
     
     if (!themeButtons.length) return;
 
-    createStars();
-    createRain();
+    if (!document.documentElement.classList.contains('reduce-motion')) {
+        createStars();
+        createRain();
+    }
 
     function applyTheme(theme: Theme) {
         document.documentElement.setAttribute('data-theme', theme);
@@ -181,6 +214,8 @@ function createRain(count = 40) {
 
 function getActiveView(): HTMLElement | null {
     const generatorView = document.getElementById('generator-view') as HTMLElement;
+    const validatorView = document.getElementById('validator-view') as HTMLElement;
+    const batchView = document.getElementById('batch-view') as HTMLElement;
     const extrapolatorView = document.getElementById('extrapolator-view') as HTMLElement;
     const method1View = document.getElementById('method1-view') as HTMLElement;
     const dataView = document.getElementById('data-view') as HTMLElement;
@@ -188,6 +223,8 @@ function getActiveView(): HTMLElement | null {
 
 
     if (generatorView && !generatorView.classList.contains('hidden')) return generatorView;
+    if (validatorView && !validatorView.classList.contains('hidden')) return validatorView;
+    if (batchView && !batchView.classList.contains('hidden')) return batchView;
     if (extrapolatorView && !extrapolatorView.classList.contains('hidden')) return extrapolatorView;
     if (method1View && !method1View.classList.contains('hidden')) return method1View;
     if (dataView && !dataView.classList.contains('hidden')) return dataView;
@@ -198,12 +235,16 @@ function getActiveView(): HTMLElement | null {
 
 function setupViewSwitcher() {
     const generatorView = document.getElementById('generator-view') as HTMLElement;
+    const validatorView = document.getElementById('validator-view') as HTMLElement;
+    const batchView = document.getElementById('batch-view') as HTMLElement;
     const extrapolatorView = document.getElementById('extrapolator-view') as HTMLElement;
     const method1View = document.getElementById('method1-view') as HTMLElement;
     const dataView = document.getElementById('data-view') as HTMLElement;
     const historyView = document.getElementById('history-view') as HTMLElement;
     
     const generatorBtn = document.getElementById('mode-generator-btn');
+    const validatorBtn = document.getElementById('mode-validator-btn');
+    const batchBtn = document.getElementById('mode-batch-btn');
     const extrapolatorBtn = document.getElementById('mode-extrapolator-btn');
     const method1Btn = document.getElementById('mode-method1-btn');
     const dataBtn = document.getElementById('mode-data-btn');
@@ -213,7 +254,7 @@ function setupViewSwitcher() {
     const appTitle = document.getElementById('app-title');
     const transitionDuration = 300; 
 
-    const views = [generatorView, extrapolatorView, method1View, dataView, historyView];
+    const views = [generatorView, validatorView, batchView, extrapolatorView, method1View, dataView, historyView];
     views.forEach(view => {
         if (view) {
             view.style.transition = `opacity ${transitionDuration}ms ease-in-out`;
@@ -225,6 +266,9 @@ function setupViewSwitcher() {
         const currentView = getActiveView();
         
         if (currentView === viewToShow) return;
+
+        const reducedMotion = document.documentElement.classList.contains('reduce-motion');
+        const effectiveDuration = reducedMotion ? 0 : transitionDuration;
 
         if (currentView) {
             currentView.style.opacity = '0';
@@ -243,10 +287,16 @@ function setupViewSwitcher() {
             if(appTitle) appTitle.textContent = newTitle;
             document.querySelectorAll('.mode-switcher .mode-btn').forEach(btn => btn.classList.remove('active'));
             newActiveBtn.classList.add('active');
-        }, transitionDuration);
+            newActiveBtn.setAttribute('aria-current', 'page');
+            document.querySelectorAll('.mode-switcher .mode-btn').forEach(btn => {
+                if (btn !== newActiveBtn) btn.removeAttribute('aria-current');
+            });
+        }, effectiveDuration);
     }
 
     generatorBtn?.addEventListener('click', () => switchView(generatorView, "Generador de Tarjetas", generatorBtn));
+    validatorBtn?.addEventListener('click', () => switchView(validatorView, "Validador", validatorBtn));
+    batchBtn?.addEventListener('click', () => switchView(batchView, "Generación por Lotes", batchBtn));
     extrapolatorBtn?.addEventListener('click', () => switchView(extrapolatorView, "Extrapolador", extrapolatorBtn));
     method1Btn?.addEventListener('click', () => switchView(method1View, "Método: Extrapolaciones", method1Btn));
     dataBtn?.addEventListener('click', () => switchView(dataView, "Generador de Datos", dataBtn));
@@ -387,20 +437,222 @@ function showError(message: string, prefixOrContainer: string | HTMLElement = ''
     }, 4000);
 }
 
-function calculateLuhn(number: string): number {
-    let sum = 0;
-    let shouldDouble = true;
-    for (let i = number.length - 1; i >= 0; i--) {
-        let digit = parseInt(number.charAt(i), 10);
-        if (shouldDouble) {
-            digit *= 2;
-            if (digit > 9) digit -= 9;
+function getFieldMessageElement(input: HTMLInputElement): HTMLElement | null {
+    const existing = document.getElementById(`${input.id}-message`);
+    if (existing) return existing;
+
+    const field = input.closest('.field');
+    if (!field) return null;
+    const message = document.createElement('p');
+    message.id = `${input.id}-message`;
+    message.className = 'field-message';
+    message.setAttribute('aria-live', 'polite');
+    field.appendChild(message);
+
+    const describedBy = new Set((input.getAttribute('aria-describedby') || '').split(' ').filter(Boolean));
+    describedBy.add(message.id);
+    input.setAttribute('aria-describedby', [...describedBy].join(' '));
+    return message;
+}
+
+function setFieldMessage(input: HTMLInputElement, message: string, kind: 'error' | 'success' | '' = 'error') {
+    const messageElement = getFieldMessageElement(input);
+    if (!messageElement) return;
+    messageElement.textContent = message;
+    messageElement.classList.toggle('is-error', kind === 'error');
+    messageElement.classList.toggle('is-success', kind === 'success');
+    if (kind === 'error') input.setAttribute('aria-invalid', 'true');
+    else input.removeAttribute('aria-invalid');
+}
+
+function clearFieldMessage(input: HTMLInputElement) {
+    setFieldMessage(input, '', '');
+}
+
+function setupValidator() {
+    const input = document.getElementById('validator-number') as HTMLInputElement | null;
+    const validateButton = document.getElementById('validate-number-btn') as HTMLButtonElement | null;
+    const clearButton = document.getElementById('clear-validator-btn') as HTMLButtonElement | null;
+    const resultPanel = document.getElementById('validator-result') as HTMLElement | null;
+    const resultTitle = document.getElementById('validator-result-title') as HTMLElement | null;
+    const checksList = document.getElementById('validator-checks') as HTMLUListElement | null;
+    const explanation = document.getElementById('validator-explanation') as HTMLElement | null;
+    if (!input || !validateButton || !clearButton || !resultPanel || !resultTitle || !checksList || !explanation) return;
+
+    const validate = () => {
+        const result = validateCardNumber(input.value);
+        checksList.replaceChildren();
+
+        const checks = [
+            ['Formato', result.checks.format],
+            [`Longitud (${result.digits.length} dígitos)`, result.checks.length],
+            ['Algoritmo de Luhn', result.checks.luhn],
+        ];
+        checks.forEach(([label, passed]) => {
+            const item = document.createElement('li');
+            item.className = passed ? 'check-pass' : 'check-fail';
+            item.textContent = `${passed ? '✓' : '×'} ${label}`;
+            checksList.appendChild(item);
+        });
+
+        resultPanel.classList.remove('hidden', 'is-valid', 'is-invalid');
+        resultPanel.classList.add(result.isValid ? 'is-valid' : 'is-invalid');
+        resultTitle.textContent = result.isValid ? 'Número válido' : 'Número no válido';
+        explanation.textContent = result.messages.join(' ');
+
+        if (result.isValid) setFieldMessage(input, 'La comprobación se completó correctamente.', 'success');
+        else setFieldMessage(input, result.messages[0], 'error');
+    };
+
+    validateButton.addEventListener('click', validate);
+    input.addEventListener('input', () => {
+        clearFieldMessage(input);
+        resultPanel.classList.add('hidden');
+    });
+    input.addEventListener('keydown', event => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            validate();
         }
-        sum += digit;
-        shouldDouble = !shouldDouble;
-    }
-    const mod = sum % 10;
-    return mod === 0 ? 0 : 10 - mod;
+    });
+    clearButton.addEventListener('click', () => {
+        input.value = '';
+        clearFieldMessage(input);
+        resultPanel.classList.add('hidden');
+        checksList.replaceChildren();
+        input.focus();
+    });
+}
+
+function setupBatchGenerator() {
+    const patternInput = document.getElementById('batch-pattern') as HTMLInputElement | null;
+    const quantityInput = document.getElementById('batch-quantity') as HTMLInputElement | null;
+    const baseYearInput = document.getElementById('batch-base-year') as HTMLInputElement | null;
+    const seedInput = document.getElementById('batch-seed') as HTMLInputElement | null;
+    const formatSelect = document.getElementById('batch-format') as HTMLSelectElement | null;
+    const delimiterSelect = document.getElementById('batch-delimiter') as HTMLSelectElement | null;
+    const delimiterField = document.getElementById('batch-delimiter-field') as HTMLElement | null;
+    const headerInput = document.getElementById('batch-header') as HTMLInputElement | null;
+    const generateButton = document.getElementById('generate-batch-btn') as HTMLButtonElement | null;
+    const copyButton = document.getElementById('copy-batch-btn') as HTMLButtonElement | null;
+    const exportButton = document.getElementById('export-batch-btn') as HTMLButtonElement | null;
+    const resultsArea = document.getElementById('batch-results') as HTMLTextAreaElement | null;
+    const status = document.getElementById('batch-status') as HTMLElement | null;
+    if (!patternInput || !quantityInput || !baseYearInput || !seedInput || !formatSelect || !delimiterSelect || !delimiterField || !headerInput || !generateButton || !copyButton || !exportButton || !resultsArea || !status) return;
+
+    baseYearInput.value = String(new Date().getFullYear());
+
+    let records: Array<Record<string, string | number | boolean>> = [];
+
+    const getDelimiter = () => delimiterSelect.value === 'tab' ? '\t' : delimiterSelect.value;
+    const updateFormatControls = () => {
+        const isText = formatSelect.value === 'txt';
+        const isJson = formatSelect.value === 'json';
+        delimiterField.classList.toggle('is-disabled', !isText);
+        delimiterSelect.disabled = !isText;
+        headerInput.disabled = isJson;
+    };
+    const renderOutput = () => {
+        if (!records.length) return;
+        resultsArea.value = serializeBatch(records, formatSelect.value, headerInput.checked, getDelimiter());
+    };
+    const clearErrors = () => [patternInput, quantityInput, baseYearInput, seedInput].forEach(clearFieldMessage);
+
+    const generate = () => {
+        clearErrors();
+        status.textContent = '';
+        const validation = validateBatchOptions({
+            pattern: patternInput.value,
+            quantity: Number(quantityInput.value),
+            seed: seedInput.value,
+            baseYear: Number(baseYearInput.value),
+        });
+
+        if (!validation.isValid) {
+            const fieldMap: Record<string, HTMLInputElement> = {
+                pattern: patternInput,
+                quantity: quantityInput,
+                seed: seedInput,
+                baseYear: baseYearInput,
+            };
+            Object.entries(validation.errors).forEach(([field, message]) => {
+                setFieldMessage(fieldMap[field], String(message), 'error');
+            });
+            const firstInvalid = Object.keys(validation.errors)[0];
+            fieldMap[firstInvalid]?.focus();
+            return;
+        }
+
+        records = generateSyntheticBatch(validation.values);
+        renderOutput();
+        copyButton.disabled = false;
+        exportButton.disabled = false;
+        status.textContent = `${records.length} registros sintéticos generados con la semilla “${validation.values.seed}”.`;
+        setFieldMessage(seedInput, 'Guarda esta semilla para repetir exactamente el lote.', 'success');
+    };
+
+    patternInput.addEventListener('input', () => {
+        patternInput.value = patternInput.value.replace(/[^0-9xX]/g, '').toLowerCase();
+        clearFieldMessage(patternInput);
+    });
+    quantityInput.addEventListener('input', () => clearFieldMessage(quantityInput));
+    baseYearInput.addEventListener('input', () => clearFieldMessage(baseYearInput));
+    seedInput.addEventListener('input', () => clearFieldMessage(seedInput));
+    formatSelect.addEventListener('change', () => {
+        updateFormatControls();
+        renderOutput();
+    });
+    delimiterSelect.addEventListener('change', renderOutput);
+    headerInput.addEventListener('change', renderOutput);
+    generateButton.addEventListener('click', generate);
+
+    copyButton.addEventListener('click', () => {
+        copyTextToClipboard(resultsArea.value, copyButton);
+        status.textContent = 'Lote copiado al portapapeles.';
+    });
+    exportButton.addEventListener('click', () => {
+        if (!resultsArea.value) return;
+        const extension = formatSelect.value === 'json' ? 'json' : formatSelect.value === 'csv' ? 'csv' : 'txt';
+        const mimeType = extension === 'json' ? 'application/json' : extension === 'csv' ? 'text/csv' : 'text/plain';
+        const blob = new Blob([resultsArea.value], { type: `${mimeType};charset=utf-8` });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        const safeSeed = seedInput.value.trim().replace(/[^a-z0-9_-]+/gi, '-').slice(0, 32) || 'lote';
+        link.href = url;
+        link.download = `datos-sinteticos-${safeSeed}.${extension}`;
+        link.click();
+        URL.revokeObjectURL(url);
+        status.textContent = `Archivo ${extension.toUpperCase()} exportado.`;
+    });
+
+    updateFormatControls();
+}
+
+function setupKeyboardShortcuts() {
+    const shortcutTargets: Record<string, string> = {
+        g: 'mode-generator-btn',
+        v: 'mode-validator-btn',
+        l: 'mode-batch-btn',
+    };
+
+    document.addEventListener('keydown', event => {
+        if (event.altKey && shortcutTargets[event.key.toLowerCase()]) {
+            event.preventDefault();
+            document.getElementById(shortcutTargets[event.key.toLowerCase()])?.click();
+            return;
+        }
+
+        if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+            const activeView = getActiveView();
+            const primaryAction = activeView?.querySelector<HTMLButtonElement>(
+                '#generateBtnAdv, #validate-number-btn, #generate-batch-btn, #ext-generateBtnAdv, #m1-generateBtnAdv, #data-generate-btn'
+            );
+            if (primaryAction && !primaryAction.disabled) {
+                event.preventDefault();
+                primaryAction.click();
+            }
+        }
+    });
 }
 
 function setupGenerator(prefix: string = '') {
@@ -415,30 +667,35 @@ function setupGenerator(prefix: string = '') {
     if (!generateBtn) return;
 
     const generate = () => {
+        [binInput, monthInput, yearInput, cvvInput, quantityInput].filter(Boolean).forEach(clearFieldMessage);
         const binValue = binInput.value.trim().toLowerCase();
         const monthValue = monthInput.value.trim();
         const yearValue = yearInput.value.trim();
+        const fail = (input: HTMLInputElement, message: string) => {
+            setFieldMessage(input, message, 'error');
+            input.focus();
+        };
 
         // 1. Validaciones estrictas
         // Validación de BIN
         if (!binValue) {
-            showError("El campo BIN es obligatorio.", prefix);
+            fail(binInput, "El campo BIN es obligatorio.");
             return;
         }
         const binFormatRegex = /^[0-9x]+$/;
         if (!binFormatRegex.test(binValue)) {
-            showError("Formato de BIN inválido. Use solo números y/o la letra 'x'.", prefix);
+            fail(binInput, "Formato de BIN inválido. Usa solo números y/o la letra 'x'.");
             return;
         }
         if (binValue.length < 6 || binValue.length > 16) {
-            showError("Longitud de BIN inválida. Debe tener entre 6 y 16 caracteres.", prefix);
+            fail(binInput, "La longitud debe estar entre 6 y 16 caracteres.");
             return;
         }
 
         // Validación específica para American Express
         const isAmex = binValue.startsWith('34') || binValue.startsWith('37');
         if (isAmex && binValue.length > 15) {
-            showError("Los BIN de American Express no deben exceder los 15 caracteres.", prefix);
+            fail(binInput, "Los patrones American Express no deben exceder 15 caracteres.");
             return;
         }
 
@@ -446,7 +703,7 @@ function setupGenerator(prefix: string = '') {
         if (monthValue) {
             const monthNum = parseInt(monthValue, 10);
             if (isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
-                showError("Mes inválido. Use un valor entre 1 y 12.", prefix);
+                fail(monthInput, "Usa un mes entre 1 y 12.");
                 return;
             }
         }
@@ -456,24 +713,32 @@ function setupGenerator(prefix: string = '') {
         if (yearValue) {
             let yearNum = parseInt(yearValue, 10);
             if (isNaN(yearNum)) {
-                showError("Año inválido. Use un formato numérico (ej: 25 o 2025).", prefix);
+                fail(yearInput, "Usa un año numérico, por ejemplo 2027.");
                 return;
             }
             // Manejar formato corto yy -> 20yy
             if (yearValue.length <= 2) {
-                if (yearNum >= 25 && yearNum <= 50) {
-                    yearNum += 2000;
-                } else {
-                    showError("Año inválido. Use 4 dígitos o un formato de 2 dígitos entre 25 y 50.", prefix);
-                    return;
-                }
+                yearNum += 2000;
             }
 
-            if (yearNum < 2025 || yearNum > 2050) {
-                showError("Año fuera de rango. El año debe estar entre 2025 y 2050.", prefix);
+            const currentYear = new Date().getFullYear();
+            if (yearNum < currentYear || yearNum > currentYear + 30) {
+                fail(yearInput, `El año debe estar entre ${currentYear} y ${currentYear + 30}.`);
                 return;
             }
             processedYear = String(yearNum);
+        }
+
+        const quantity = Number(quantityInput.value);
+        if (!Number.isInteger(quantity) || quantity < 1 || quantity > 100) {
+            fail(quantityInput, 'La cantidad debe estar entre 1 y 100.');
+            return;
+        }
+
+        const expectedCvvLength = isAmex ? 4 : 3;
+        if (cvvInput.value && !new RegExp(`^\\d{${expectedCvvLength}}$`).test(cvvInput.value)) {
+            fail(cvvInput, `El código de seguridad debe tener ${expectedCvvLength} dígitos.`);
+            return;
         }
 
         const pattern = binValue;
@@ -483,7 +748,7 @@ function setupGenerator(prefix: string = '') {
             month: monthInput.value,
             year: processedYear,
             cvv: cvvInput.value,
-            quantity: parseInt(quantityInput.value, 10) || 10
+            quantity
         };
 
         const results = Array.from({ length: config.quantity }, () => {
@@ -515,6 +780,7 @@ function setupGenerator(prefix: string = '') {
         });
 
         resultsArea.value = results.join('\n');
+        setFieldMessage(binInput, `${results.length} resultados generados correctamente.`, 'success');
         
         addEntry('generate', { 
             bin: pattern, 
@@ -529,6 +795,7 @@ function setupGenerator(prefix: string = '') {
 
     binInput?.addEventListener('input', () => {
         binInput.value = binInput.value.replace(/[^0-9xX]/g, '').toLowerCase();
+        clearFieldMessage(binInput);
         
         if (cvvInput) {
             const isAmex = binInput.value.startsWith('34') || binInput.value.startsWith('37');
@@ -543,6 +810,9 @@ function setupGenerator(prefix: string = '') {
                 cvvInput.value = cvvInput.value.slice(0, cvvMaxLength);
             }
         }
+    });
+    [monthInput, yearInput, cvvInput, quantityInput].filter(Boolean).forEach(input => {
+        input.addEventListener('input', () => clearFieldMessage(input));
     });
 }
 

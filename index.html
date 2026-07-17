@@ -29,13 +29,23 @@
                 <span>Lluvia</span>
             </button>
         </div>
+
+        <div class="preferences-bar" aria-label="Preferencias de accesibilidad">
+            <label class="motion-toggle" for="reduce-motion-toggle">
+                <input type="checkbox" id="reduce-motion-toggle">
+                <span>Reducir animaciones</span>
+            </label>
+            <span class="shortcut-hint" aria-label="Atajos disponibles">Atajos: Alt+G, Alt+V, Alt+L · Ctrl+Enter</span>
+        </div>
         
-        <div class="mode-switcher">
-            <button id="mode-generator-btn" class="mode-btn active">Generador</button>
-            <button id="mode-extrapolator-btn" class="mode-btn">Extrapolador</button>
-            <button id="mode-method1-btn" class="mode-btn">Método 1</button>
-            <button id="mode-data-btn" class="mode-btn">Datos</button>
-            <button id="mode-history-btn" class="mode-btn">BINs Guardados</button>
+        <div class="mode-switcher" role="navigation" aria-label="Herramientas">
+            <button id="mode-generator-btn" class="mode-btn active" aria-controls="generator-view" aria-current="page">Generador</button>
+            <button id="mode-validator-btn" class="mode-btn" aria-controls="validator-view">Validador</button>
+            <button id="mode-batch-btn" class="mode-btn" aria-controls="batch-view">Lotes</button>
+            <button id="mode-extrapolator-btn" class="mode-btn" aria-controls="extrapolator-view">Extrapolador</button>
+            <button id="mode-method1-btn" class="mode-btn" aria-controls="method1-view">Método 1</button>
+            <button id="mode-data-btn" class="mode-btn" aria-controls="data-view">Datos</button>
+            <button id="mode-history-btn" class="mode-btn" aria-controls="history-view">BINs Guardados</button>
         </div>
 
         <div id="generator-view" class="view-wrapper">
@@ -101,6 +111,99 @@
             </div>
         </div>
         
+        <div id="validator-view" class="view-wrapper hidden">
+            <main class="card focused-tool-card" aria-labelledby="validator-title">
+                <div>
+                    <h2 id="validator-title" class="card-title">Validador de números</h2>
+                    <p class="card-description standalone-description">Comprueba formato, longitud y algoritmo de Luhn. El número no se guarda en el historial ni se envía fuera del navegador.</p>
+                </div>
+                <div class="field">
+                    <label for="validator-number">Número para validar</label>
+                    <input type="text" id="validator-number" inputmode="numeric" autocomplete="off" maxlength="25" placeholder="4242 4242 4242 4242" aria-describedby="validator-help validator-number-message">
+                    <p id="validator-help" class="field-help">Se permiten números, espacios y guiones.</p>
+                    <p id="validator-number-message" class="field-message" aria-live="polite"></p>
+                </div>
+                <div class="button-row">
+                    <button id="validate-number-btn" class="btn" type="button">Validar número</button>
+                    <button id="clear-validator-btn" class="btn btn-secondary" type="button">Limpiar</button>
+                </div>
+                <section id="validator-result" class="validation-result hidden" role="status" aria-live="polite" aria-atomic="true">
+                    <h3 id="validator-result-title"></h3>
+                    <ul id="validator-checks" class="check-list"></ul>
+                    <p id="validator-explanation"></p>
+                </section>
+            </main>
+        </div>
+
+        <div id="batch-view" class="view-wrapper hidden">
+            <div class="tool-grid">
+                <main class="card" aria-labelledby="batch-title">
+                    <div>
+                        <h2 id="batch-title" class="card-title">Generación reproducible por lotes</h2>
+                        <p class="card-description standalone-description">Genera hasta 50 registros sintéticos. Una misma semilla y configuración producen siempre el mismo lote.</p>
+                    </div>
+                    <div class="field">
+                        <label for="batch-pattern">Patrón</label>
+                        <input type="text" id="batch-pattern" inputmode="text" maxlength="16" value="424242xxxxxx" placeholder="424242xxxxxx" aria-describedby="batch-pattern-help batch-pattern-message">
+                        <p id="batch-pattern-help" class="field-help">Entre 6 y 16 caracteres; usa “x” para posiciones variables.</p>
+                        <p id="batch-pattern-message" class="field-message" aria-live="polite"></p>
+                    </div>
+                    <div class="form-row form-row-inline-mobile">
+                        <div class="field">
+                            <label for="batch-quantity">Cantidad</label>
+                            <input type="number" id="batch-quantity" min="1" max="50" value="10" aria-describedby="batch-quantity-message">
+                            <p id="batch-quantity-message" class="field-message" aria-live="polite"></p>
+                        </div>
+                        <div class="field">
+                            <label for="batch-base-year">Año base</label>
+                            <input type="number" id="batch-base-year" min="2000" max="2100" aria-describedby="batch-base-year-message">
+                            <p id="batch-base-year-message" class="field-message" aria-live="polite"></p>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="batch-seed">Semilla</label>
+                        <input type="text" id="batch-seed" value="prueba-01" maxlength="80" autocomplete="off" aria-describedby="batch-seed-message">
+                        <p id="batch-seed-message" class="field-message" aria-live="polite"></p>
+                    </div>
+                    <div class="form-row form-row-inline-mobile">
+                        <div class="field">
+                            <label for="batch-format">Formato</label>
+                            <select id="batch-format">
+                                <option value="csv">CSV</option>
+                                <option value="json">JSON</option>
+                                <option value="txt">Texto</option>
+                            </select>
+                        </div>
+                        <div class="field" id="batch-delimiter-field">
+                            <label for="batch-delimiter">Separador de texto</label>
+                            <select id="batch-delimiter">
+                                <option value="|">Barra vertical (|)</option>
+                                <option value=";">Punto y coma (;)</option>
+                                <option value="tab">Tabulación</option>
+                            </select>
+                        </div>
+                    </div>
+                    <label class="checkbox-row" for="batch-header">
+                        <input type="checkbox" id="batch-header" checked>
+                        <span>Incluir encabezados</span>
+                    </label>
+                    <button id="generate-batch-btn" class="btn" type="button">Generar lote</button>
+                    <p id="batch-status" class="action-status" role="status" aria-live="polite"></p>
+                </main>
+                <section class="card" aria-labelledby="batch-results-title">
+                    <div>
+                        <h2 id="batch-results-title" class="card-title">Resultado</h2>
+                        <p class="card-description standalone-description">Todos los registros se etiquetan como datos sintéticos.</p>
+                    </div>
+                    <textarea id="batch-results" class="results-area batch-results" readonly spellcheck="false" aria-label="Resultado del lote" placeholder="El lote aparecerá aquí..."></textarea>
+                    <div class="button-row">
+                        <button id="copy-batch-btn" class="btn btn-secondary" type="button" disabled>Copiar</button>
+                        <button id="export-batch-btn" class="btn" type="button" disabled>Exportar archivo</button>
+                    </div>
+                </section>
+            </div>
+        </div>
+
         <div id="extrapolator-view" class="view-wrapper hidden">
             <div class="extrapolator-grid-layout">
                 <div class="card extrapolator-table-card">
@@ -470,7 +573,6 @@
     </div>
 
 
-    <script type="module" src="index.tsx"></script>
-<script type="module" src="/index.tsx"></script>
+    <script type="module" src="/index.tsx"></script>
 </body>
 </html>

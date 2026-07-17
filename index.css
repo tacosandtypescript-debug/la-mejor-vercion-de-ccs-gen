@@ -764,6 +764,184 @@ input:checked + .slider:before { transform: translateX(18px); }
   }
 }
 
+/* User-controlled accessibility preference */
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+}
+html.reduce-motion #animated-bg {
+    display: none;
+}
+
+/* Validator, batch tools and accessible feedback */
+.preferences-bar {
+    width: 100%;
+    max-width: 700px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--txt-secondary);
+    font-size: 0.75rem;
+}
+.motion-toggle,
+.checkbox-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    color: var(--txt-secondary);
+}
+.motion-toggle input,
+.checkbox-row input {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin: 0;
+    accent-color: rgb(var(--accent-rgb));
+}
+.shortcut-hint {
+    text-align: right;
+}
+.standalone-description {
+    margin-top: 0.4rem;
+    margin-bottom: 0;
+}
+.focused-tool-card {
+    max-width: 680px;
+    margin: 0 auto;
+}
+.tool-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+.button-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+.field-help,
+.field-message,
+.action-status {
+    min-height: 1.2em;
+    margin: 0.35rem 0 0 0.4rem;
+    font-size: 0.75rem;
+    line-height: 1.35;
+    color: var(--txt-secondary);
+}
+.field-message:empty,
+.action-status:empty {
+    min-height: 0;
+    margin-top: 0;
+}
+.field-message.is-error {
+    color: var(--danger);
+}
+.field-message.is-success {
+    color: var(--success);
+}
+input[aria-invalid="true"] {
+    border-color: var(--danger);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14);
+}
+.validation-result {
+    border: 1px solid var(--stroke);
+    border-left-width: 4px;
+    border-radius: var(--radius-m);
+    background: var(--bg-field);
+    padding: 1rem;
+}
+.validation-result.is-valid {
+    border-left-color: var(--success);
+}
+.validation-result.is-invalid {
+    border-left-color: var(--danger);
+}
+.validation-result h3 {
+    margin: 0 0 0.75rem;
+    font-size: 1rem;
+}
+.validation-result p {
+    margin: 0.75rem 0 0;
+    color: var(--txt-secondary);
+    line-height: 1.5;
+}
+.check-list {
+    list-style: none;
+    display: grid;
+    gap: 0.45rem;
+    padding: 0;
+    margin: 0;
+}
+.check-pass { color: var(--success); }
+.check-fail { color: var(--danger); }
+.batch-results {
+    min-height: 360px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+}
+.is-disabled {
+    opacity: 0.55;
+}
+.mode-switcher {
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    overscroll-behavior-inline: contain;
+}
+.mode-switcher .mode-btn {
+    flex: 0 0 auto;
+    min-width: max-content;
+}
+.btn:focus-visible,
+.btn-secondary:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 3px solid rgba(var(--accent-rgb), 0.35);
+    outline-offset: 2px;
+}
+
+@media (min-width: 900px) {
+    .tool-grid {
+        grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+        align-items: stretch;
+    }
+}
+
+@media (max-width: 600px) {
+    body {
+        padding: 0.75rem;
+    }
+    .preferences-bar {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+    .shortcut-hint {
+        text-align: left;
+    }
+    .button-row {
+        grid-template-columns: 1fr;
+    }
+    .mode-switcher {
+        flex-wrap: nowrap !important;
+        justify-content: flex-start;
+        padding-bottom: 0.4rem;
+    }
+    .mode-switcher .mode-btn {
+        min-height: 44px;
+        padding-inline: 0.8rem;
+    }
+    .batch-results {
+        min-height: 260px;
+    }
+}
+
 /* --- NEW: Hide scrollbars on mobile for a native look --- */
 @media (max-width: 767px) {
     .history-list-container,
