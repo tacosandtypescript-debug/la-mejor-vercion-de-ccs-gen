@@ -17,13 +17,13 @@ Aplicación web local para generar datos sintéticos de tarjetas destinados a de
 ### Requisitos
 
 - Node.js 18 o posterior.
-- npm o pnpm.
+- npm.
 
 ### Instalación
 
 ```bash
-pnpm install
-pnpm dev
+npm install
+npm run dev
 ```
 
 La terminal mostrará la dirección local de la aplicación, normalmente `http://localhost:3000`.
@@ -31,8 +31,8 @@ La terminal mostrará la dirección local de la aplicación, normalmente `http:/
 ### Compilar para producción
 
 ```bash
-pnpm build
-pnpm preview
+npm run build
+npm run preview
 ```
 
 ## Privacidad
