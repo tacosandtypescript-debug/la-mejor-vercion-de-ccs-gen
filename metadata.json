@@ -1,5 +1,5 @@
 {
-  "name": " la mejor vercion de ccs gen",
-  "description": "A tool to generate valid credit card numbers for testing and development purposes.",
+  "name": "Herramientas de Tarjetas",
+  "description": "Herramientas locales para generar datos sintéticos destinados a desarrollo y pruebas.",
   "requestFramePermissions": []
 }

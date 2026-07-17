@@ -1,5 +1,5 @@
 {
-  "name": "ccgen",
-  "description": "An empty app",
+  "name": "Herramientas de Tarjetas",
+  "description": "Herramientas locales para generar datos sintéticos destinados a desarrollo y pruebas.",
   "requestFramePermissions": []
 }

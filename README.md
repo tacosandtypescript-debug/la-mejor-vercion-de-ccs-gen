@@ -1,27 +1,44 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
-
 # Herramientas de Tarjetas
 
-Esta aplicación proporciona un conjunto de herramientas para generar y analizar números de tarjetas de crédito para fines de desarrollo y pruebas.
+Aplicación web local para generar datos sintéticos de tarjetas destinados a desarrollo, demostraciones y pruebas de interfaces. Funciona en el navegador y no requiere servicios de inteligencia artificial ni claves de API.
 
-Vea su aplicación en AI Studio: https://ai.studio/apps/drive/1_rqv4Ee45fPcSwpIzi6TLRmLTr8f3kkC
+## Funciones
 
-## Ejecutar Localmente
+- Generación a partir de patrones BIN con dígitos variables.
+- Cálculo y validación mediante el algoritmo de Luhn.
+- Compatibilidad con números de 15 y 16 dígitos.
+- Extrapolación y comparación de patrones.
+- Generación de datos ficticios para pruebas.
+- Historial y BINs guardados en el almacenamiento local del navegador.
+- Temas Día, Noche y Lluvia.
 
-**Requisitos Previos:**
-- Node.js (v18 o superior)
-- npm o pnpm
+## Ejecutar localmente
 
-### Instalar Dependencias y Ejecutar
+### Requisitos
+
+- Node.js 18 o posterior.
+- npm o pnpm.
+
+### Instalación
 
 ```bash
-# Instalar dependencias
-npm install
-
-# Ejecutar el servidor de desarrollo
-npm run dev
+pnpm install
+pnpm dev
 ```
 
-La aplicación estará disponible en la URL que muestre la terminal (generalmente `http://localhost:3000`).
+La terminal mostrará la dirección local de la aplicación, normalmente `http://localhost:3000`.
+
+### Compilar para producción
+
+```bash
+pnpm build
+pnpm preview
+```
+
+## Privacidad
+
+La funcionalidad principal se ejecuta localmente. El historial y los BINs guardados permanecen en el navegador mediante `localStorage`.
+
+## Uso responsable
+
+Este proyecto está pensado exclusivamente para generar datos sintéticos en entornos de desarrollo y pruebas. No debe utilizarse con datos financieros reales ni para realizar transacciones.
