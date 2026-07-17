@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="es" data-theme="night">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <title>Herramientas de Tarjetas</title>
+<script type="importmap">
+{
+  "imports": {
+    "path": "https://aistudiocdn.com/path@^0.12.7",
+    "vite": "https://aistudiocdn.com/vite@^7.2.2",
+    "url": "https://aistudiocdn.com/url@^0.11.4",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.29.1"
+  }
+}
+</script>
+    <link rel="stylesheet" href="index.css">
+<link rel="stylesheet" href="/index.css">
+</head>
+<body>
+    <div id="animated-bg">
+        <div id="stars-container"></div>
+        <div id="rainy-forest-bg"></div>
+    </div>
+
+    <section class="herramienta">
+        <h1 class="titulo" id="app-title">Generador de Tarjetas</h1>
+
+        <div class="theme-switcher">
+            <button id="btn-day" class="theme-btn" data-theme="day" aria-pressed="false" aria-label="Modo Día">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.894 6.106a.75.75 0 010 1.06l-1.591 1.59a.75.75 0 01-1.06-1.061l1.59-1.591a.75.75 0 011.06 0zM21.75 12a.75.75 0 01-.75.75h-2.25a.75.75 0 010-1.5H21a.75.75 0 01.75.75zM17.894 17.894a.75.75 0 01-1.06 0l-1.59-1.591a.75.75 0 111.06-1.06l1.591 1.59a.75.75 0 010 1.061zM12 18.75a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0v-2.25a.75.75 0 01.75-.75zM5.106 17.894a.75.75 0 010-1.06l1.591-1.59a.75.75 0 011.06 1.061l-1.59 1.591a.75.75 0 01-1.06 0zM2.25 12a.75.75 0 01.75-.75h2.25a.75.75 0 010 1.5H3a.75.75 0 01-.75-.75zM6.106 5.106a.75.75 0 011.06 0l1.59 1.591a.75.75 0 01-1.06 1.06l-1.591-1.59a.75.75 0 010-1.061z"/></svg>
+                <span>Día</span>
+            </button>
+            <button id="btn-night" class="theme-btn" data-theme="night" aria-pressed="true" aria-label="Modo Noche">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10.503 10.503 0 01-9.694 6.46c-5.799 0-10.5-4.701-10.5-10.5 0-3.864 2.11-7.249 5.28-9.042a.75.75 0 01.818.162z" clip-rule="evenodd" /></svg>
+                <span>Noche</span>
+            </button>
+            <button id="btn-sparkle" class="theme-btn" data-theme="sparkle" aria-pressed="false" aria-label="Modo Destellos">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M10.5 1.5a.75.75 0 01.75.75V3h1.5a.75.75 0 010 1.5H11.25v1.5a.75.75 0 01-1.5 0V4.5H8.25a.75.75 0 010-1.5H9.75V2.25a.75.75 0 01.75-.75zM8.25 4.5h1.5v1.5h-1.5V4.5zM4.5 9.75A.75.75 0 015.25 9h1.5a.75.75 0 010 1.5H5.25A.75.75 0 014.5 9.75zM9 11.25a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5H9.75a.75.75 0 01-.75-.75zM14.25 9.75a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75zM12 15.75a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 01-.75-.75zM15 12a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5a.75.75 0 01.75-.75zM10.5 15a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5a.75.75 0 01.75-.75zM7.5 15.75a.75.75 0 01.75-.75h1.5a.75.75 0 010 1.5H8.25a.75.75 0 01-.75-.75zM6 12a.75.75 0 01.75.75v1.5a.75.75 0 01-1.5 0v-1.5A.75.75 0 016 12zM18.75 16.5a.75.75 0 010-1.5h1.5a.75.75 0 010 1.5h-1.5zM18.75 5.25a.75.75 0 010-1.5h1.5a.75.75 0 010 1.5h-1.5zM2.25 15h1.5a.75.75 0 010 1.5h-1.5a.75.75 0 010-1.5zM3.75 5.25a.75.75 0 010-1.5h1.5a.75.75 0 010 1.5H3.75z" clip-rule="evenodd" /></svg>
+                <span>Lluvia</span>
+            </button>
+        </div>
+        
+        <div class="mode-switcher">
+            <button id="mode-generator-btn" class="mode-btn active">Generador</button>
+            <button id="mode-extrapolator-btn" class="mode-btn">Extrapolador</button>
+            <button id="mode-method1-btn" class="mode-btn">Método 1</button>
+            <button id="mode-data-btn" class="mode-btn">Datos</button>
+            <button id="mode-history-btn" class="mode-btn">BINs Guardados</button>
+        </div>
+
+        <div id="generator-view" class="view-wrapper">
+            <div class="generador-grid">
+                <main class="card" id="generator-card">
+                    <div class="field">
+                        <label for="bin">BIN</label>
+                        <div class="input-group">
+                            <input type="text" id="bin" placeholder="456331004806xxxx" maxlength="16" inputmode="text">
+                            <button id="paste-bin-btn" class="input-action-btn" aria-label="Pegar desde portapapeles">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path></svg>
+                            </button>
+                            <button id="clear-bin-btn" class="input-action-btn" aria-label="Borrar BIN">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-row form-row-inline-mobile">
+                        <div class="field">
+                            <label for="manual-month">Mes</label>
+                            <input type="text" id="manual-month" placeholder="MM" maxlength="2" inputmode="numeric">
+                        </div>
+                        <div class="field">
+                            <label for="manual-year">Año </label>
+                            <input type="text" id="manual-year" placeholder="YYYY" maxlength="4" inputmode="numeric">
+                        </div>
+                    </div>
+                    
+                    <hr class="divider">
+
+                    <div class="form-row form-row-inline-mobile">
+                        <div class="field"><label for="advanced-cvv">CVV (Opcional)</label><input type="text" id="advanced-cvv" placeholder="123" inputmode="numeric" pattern="[0-9]*" maxlength="4"></div>
+                        <div class="field"><label for="adv-quantity">Cantidad</label><input type="number" id="adv-quantity" value="10" min="1" max="100"></div>
+                    </div>
+                    <button id="generateBtnAdv" class="btn">Generar</button>
+                    <div class="error-toast-container"></div>
+                    
+                    <div class="generator-results-wrapper">
+                        <label class="results-label">Resultados del Generador</label>
+                        <div class="textarea-container">
+                            <textarea id="results-area-gen" class="results-area" readonly placeholder="Tus resultados aparecerán aquí..."></textarea>
+                            <button id="copyBtn" class="action-btn copy-btn" data-target="results-area-gen" aria-label="Copiar Resultados">
+                                <svg class="icon icon-copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                <span role="status" aria-live="polite">
+                                    <svg class="icon icon-check" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                </main>
+
+                <aside class="card" id="history-card">
+                    <div class="history-header">
+                        <h2>Historial de Actividad</h2>
+                        <button id="clear-history-btn">Limpiar</button>
+                    </div>
+                    <div id="history-list-container" class="history-list-container">
+                        <ul id="history-list"></ul>
+                        <p id="history-empty-state" class="history-empty-state hidden">No hay actividad reciente.</p>
+                    </div>
+                </aside>
+            </div>
+        </div>
+        
+        <div id="extrapolator-view" class="view-wrapper hidden">
+            <div class="extrapolator-grid-layout">
+                <div class="card extrapolator-table-card">
+                    <h2 class="method-title">Entrada del Generador</h2>
+                    <div class="form-table">
+                        <div class="field">
+                            <label for="ext-bin">BIN</label>
+                            <div class="input-group">
+                                <input type="text" id="ext-bin" placeholder="456331004806xxxx" maxlength="16" inputmode="text">
+                                <button id="ext-paste-bin-btn" class="input-action-btn" aria-label="Pegar desde portapapeles">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path></svg>
+                                </button>
+                                <button id="ext-clear-bin-btn" class="input-action-btn" aria-label="Borrar BIN">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-row form-row-inline-mobile">
+                            <div class="field">
+                                <label for="ext-manual-month">Mes</label>
+                                <input type="text" id="ext-manual-month" placeholder="MM" maxlength="2" inputmode="numeric">
+                            </div>
+                            <div class="field">
+                                <label for="ext-manual-year">Año</label>
+                                <input type="text" id="ext-manual-year" placeholder="YYYY" maxlength="4" inputmode="numeric">
+                            </div>
+                        </div>
+                        <div class="form-row form-row-inline-mobile">
+                            <div class="field">
+                                <label for="ext-advanced-cvv">CVV</label>
+                                <input type="text" id="ext-advanced-cvv" placeholder="123" inputmode="numeric" pattern="[0-9]*" maxlength="4">
+                            </div>
+                            <div class="field">
+                                <label for="ext-adv-quantity">Cantidad</label>
+                                <input type="number" id="ext-adv-quantity" value="10" min="1" max="100">
+                            </div>
+                        </div>
+                    </div>
+                    <button id="ext-generateBtnAdv" class="btn">Generar</button>
+                    <div class="error-toast-container"></div>
+                    <label class="results-label">Resultados del Generador</label>
+                    <div class="textarea-container">
+                        <textarea id="ext-results-area-gen" class="results-area" readonly placeholder="Los resultados del generador aparecerán aquí..."></textarea>
+                        <button class="action-btn copy-btn" data-target="ext-results-area-gen" aria-label="Copiar Resultados">
+                            <svg class="icon icon-copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            <span role="status" aria-live="polite">
+                                <svg class="icon icon-check" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            </span>
+                        </button>
+                    </div>
+                </div>
+        
+                <div class="card extrapolator-table-card">
+                    <div class="extrapolator-method">
+                        <h2 class="method-title">Básica · Similitud</h2>
+                        <p class="method-description">Compara 2 tarjetas del mismo BIN para encontrar un patrón común.</p>
+                        <div class="field"><label for="sim-cc1">Tarjeta 1</label><input type="text" id="sim-cc1" placeholder="Ej: 4915110191768499" maxlength="19" inputmode="numeric" pattern="[0-9]*"></div>
+                        <div class="field"><label for="sim-cc2">Tarjeta 2</label><input type="text" id="sim-cc2" placeholder="Ej: 4915110176928790" maxlength="19" inputmode="numeric" pattern="[0-9]*"></div>
+                        <div class="method-actions">
+                            <button id="btn-sim" class="btn">Calcular Similitud</button>
+                            <button id="use-sim-result-btn" class="btn btn-secondary hidden">Usar Patrón en Generador</button>
+                        </div>
+                        <div class="error-toast-container"></div>
+                        <div class="field result-field">
+                            <label for="sim-result">Resultado</label>
+                            <div class="textarea-container">
+                                <input type="text" id="sim-result" readonly>
+                                <button class="action-btn copy-btn" aria-label="Copiar Resultado" data-target="sim-result">
+                                    <svg class="icon icon-copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                    <span role="status" aria-live="polite"><svg class="icon icon-check" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="method1-view" class="view-wrapper hidden">
+            <div class="method1-grid-layout">
+                <div class="card extrapolator-table-card">
+                    <h2 class="method-title">Entrada del Generador</h2>
+                    <div id="m1-generator-card" class="form-table">
+                        <div class="field">
+                            <label for="m1-bin">BIN</label>
+                            <div class="input-group">
+                                <input type="text" id="m1-bin" placeholder="456331004806xxxx" maxlength="16" inputmode="text">
+                                <button id="m1-paste-bin-btn" class="input-action-btn" aria-label="Pegar desde portapapeles">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path></svg>
+                                </button>
+                                <button id="m1-clear-bin-btn" class="input-action-btn" aria-label="Borrar BIN">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-row form-row-inline-mobile">
+                            <div class="field">
+                                <label for="m1-manual-month">Mes</label>
+                                <input type="text" id="m1-manual-month" placeholder="MM" maxlength="2" inputmode="numeric">
+                            </div>
+                            <div class="field">
+                                <label for="m1-manual-year">Año </label>
+                                <input type="text" id="m1-manual-year" placeholder="YYYY" maxlength="4" inputmode="numeric">
+                            </div>
+                        </div>
+                        <div class="form-row form-row-inline-mobile">
+                            <div class="field"><label for="m1-advanced-cvv">CVV (Opcional)</label><input type="text" id="m1-advanced-cvv" placeholder="123" inputmode="numeric" pattern="[0-9]*" maxlength="4"></div>
+                            <div class="field"><label for="m1-adv-quantity">Cantidad</label><input type="number" id="m1-adv-quantity" value="10" min="1" max="100"></div>
+                        </div>
+                        <button id="m1-generateBtnAdv" class="btn">Generar</button>
+                        <div class="error-toast-container"></div>
+                        <label class="results-label">Resultados del Generador</label>
+                        <div class="textarea-container">
+                            <textarea id="m1-results-area-gen" class="results-area" readonly="" placeholder="Tus resultados aparecerán aquí..."></textarea>
+                            <button class="action-btn copy-btn" data-target="m1-results-area-gen" aria-label="Copiar Resultados">
+                                <svg class="icon icon-copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                <span role="status" aria-live="polite"><svg class="icon icon-check" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card extrapolator-table-card">
+                    <div class="extrapolator-method">
+                        <h2 class="method-title">Posibles Extrapolaciones</h2>
+                        <p class="method-description">Convierte una tarjeta en múltiples patrones de BIN.</p>
+                        <div class="field"><label for="pos-cc">Tarjeta Completa</label><input type="text" id="pos-cc" placeholder="Ej: 4833160095772767|04|20|858"></div>
+                        <div class="method-actions">
+                             <button id="btn-pos" class="btn">Generar Patrones</button>
+                        </div>
+                        <div class="error-toast-container"></div>
+                        <div class="field result-field">
+                            <label for="pos-result">Resultados</label>
+                            <div class="textarea-container">
+                                <textarea id="pos-result" class="results-area" readonly></textarea>
+                                <button class="action-btn copy-btn" aria-label="Copiar Resultados" data-target="pos-result">
+                                    <svg class="icon icon-copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                    <span role="status" aria-live="polite"><svg class="icon icon-check" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="data-view" class="view-wrapper hidden">
+            <div id="data-view-container" class="card">
+                 <h3 class="card-title">Campos básicos para registros de compra</h3>
+                 <p class="card-description">Genera un conjunto completo de datos de un cliente para pruebas de formularios de compra.</p>
+
+                <div class="data-view-layout">
+                    <div class="data-controls-panel">
+                        <div class="field">
+                            <label for="data-country-selector">País de los Datos</label>
+                            <select id="data-country-selector">
+                                <option value="Mexico" selected>México</option>
+                                <option value="United States">Estados Unidos</option>
+                            </select>
+                        </div>
+                        <div class="field" id="data-doc-type-mx-container">
+                            <label for="data-doc-type-mx">Tipo de Documento</label>
+                            <select id="data-doc-type-mx">
+                                <option value="CURP" selected>CURP</option>
+                                <option value="RFC">RFC (Persona Física)</option>
+                            </select>
+                        </div>
+                        <div class="field hidden" id="data-doc-type-us-container">
+                            <label for="data-doc-type-us">Tipo de Documento</label>
+                            <select id="data-doc-type-us">
+                                <option value="SSN" selected>Social Security Number (SSN)</option>
+                                <option value="DL">Driver's License</option>
+                                <option value="Passport">Passport</option>
+                            </select>
+                        </div>
+                        <div id="data-action-buttons">
+                            <button id="data-generate-btn" class="btn">Generar Datos</button>
+                            <button id="data-copy-all-btn" class="btn btn-secondary">Copiar Todo</button>
+                        </div>
+                    </div>
+
+                    <div id="data-form-container">
+                        <div class="data-section">
+                            <h4 class="data-section-title">Datos Personales y de Contacto</h4>
+                            <div class="data-section-grid">
+                                <div class="field">
+                                    <label for="data-field-nombres">Nombres</label>
+                                    <div class="input-group">
+                                        <input type="text" id="data-field-nombres" readonly placeholder="Nombres">
+                                        <button class="action-btn copy-btn" data-target="data-field-nombres" aria-label="Copiar Nombres"><svg class="icon icon-copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3.5A1.5 1.5 0 0 1 8.5 2h5A1.5 1.5 0 0 1 15 3.5v10A1.5 1.5 0 0 1 13.5 15h-5A1.5 1.5 0 0 1 7 13.5v-10Zm-1.5 0a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h5a3 3 0 0 0 3-3V6.5a.75.75 0 0 0-1.5 0v10a1.5 1.5 0 0 1-1.5 1.5h-5a1.5 1.5 0 0 1-1.5-1.5v-10a1.5 1.5 0 0 1 1.5-1.5H7a.75.75 0 0 0 0-1.5H5.5Z" /></svg><svg class="icon icon-check" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.052-.143Z" clip-rule="evenodd" /></svg></button>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label for="data-field-apellidos">Apellidos</label>
+                                    <div class="input-group">
+                                        <input type="text" id="data-field-apellidos" readonly placeholder="Apellidos">
+                                        <button class="action-btn copy-btn" data-target="data-field-apellidos" aria-label="Copiar Apellidos"><svg class="icon icon-copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3.5A1.5 1.5 0 0 1 8.5 2h5A1.5 1.5 0 0 1 15 3.5v10A1.5 1.5 0 0 1 13.5 15h-5A1.5 1.5 0 0 1 7 13.5v-10Zm-1.5 0a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h5a3 3 0 0 0 3-3V6.5a.75.75 0 0 0-1.5 0v10a1.5 1.5 0 0 1-1.5 1.5h-5a1.5 1.5 0 0 1-1.5-1.5v-10a1.5 1.5 0 0 1 1.5-1.5H7a.75.75 0 0 0 0-1.5H5.5Z" /></svg><svg class="icon icon-check" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.052-.143Z" clip-rule="evenodd" /></svg></button>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label for="data-field-email">Correo Electrónico</label>
+                                    <div class="input-group">
+                                        <input type="email" id="data-field-email" readonly placeholder="Correo Electrónico">
+                                        <button class="action-btn copy-btn" data-target="data-field-email" aria-label="Copiar Correo Electrónico"><svg class="icon icon-copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3.5A1.5 1.5 0 0 1 8.5 2h5A1.5 1.5 0 0 1 15 3.5v10A1.5 1.5 0 0 1 13.5 15h-5A1.5 1.5 0 0 1 7 13.5v-10Zm-1.5 0a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h5a3 3 0 0 0 3-3V6.5a.75.75 0 0 0-1.5 0v10a1.5 1.5 0 0 1-1.5 1.5h-5a1.5 1.5 0 0 1-1.5-1.5v-10a1.5 1.5 0 0 1 1.5-1.5H7a.75.75 0 0 0 0-1.5H5.5Z" /></svg><svg class="icon icon-check" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.052-.143Z" clip-rule="evenodd" /></svg></button>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label for="data-field-telefono">Teléfono</label>
+                                    <div class="input-group">
+                                        <input type="tel" id="data-field-telefono" readonly placeholder="Teléfono">
+                                        <button class="action-btn copy-btn" data-target="data-field-telefono" aria-label="Copiar Teléfono"><svg class="icon icon-copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3.5A1.5 1.5 0 0 1 8.5 2h5A1.5 1.5 0 0 1 15 3.5v10A1.5 1.5 0 0 1 13.5 15h-5A1.5 1.5 0 0 1 7 13.5v-10Zm-1.5 0a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h5a3 3 0 0 0 3-3V6.5a.75.75 0 0 0-1.5 0v10a1.5 1.5 0 0 1-1.5 1.5h-5a1.5 1.5 0 0 1-1.5-1.5v-10a1.5 1.5 0 0 1 1.5-1.5H7a.75.75 0 0 0 0-1.5H5.5Z" /></svg><svg class="icon icon-check" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.052-.143Z" clip-rule="evenodd" /></svg></button>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label for="data-field-dob">Fecha de Nacimiento</label>
+                                    <div class="input-group">
+                                        <input type="text" id="data-field-dob" readonly placeholder="Fecha de Nacimiento">
+                                        <button class="action-btn copy-btn" data-target="data-field-dob" aria-label="Copiar Fecha de Nacimiento"><svg class="icon icon-copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3.5A1.5 1.5 0 0 1 8.5 2h5A1.5 1.5 0 0 1 15 3.5v10A1.5 1.5 0 0 1 13.5 15h-5A1.5 1.5 0 0 1 7 13.5v-10Zm-1.5 0a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h5a3 3 0 0 0 3-3V6.5a.75.75 0 0 0-1.5 0v10a1.5 1.5 0 0 1-1.5 1.5h-5a1.5 1.5 0 0 1-1.5-1.5v-10a1.5 1.5 0 0 1 1.5-1.5H7a.75.75 0 0 0 0-1.5H5.5Z" /></svg><svg class="icon icon-check" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.052-.143Z" clip-rule="evenodd" /></svg></button>
+                                    </div>
+                                </div>
+                                <div class="field full-width">
+                                    <label for="data-field-nombre-completo">Nombre Completo</label>
+                                    <div class="input-group">
+                                        <input type="text" id="data-field-nombre-completo" readonly placeholder="Nombre Completo">
+                                        <button class="action-btn copy-btn" data-target="data-field-nombre-completo" aria-label="Copiar Nombre Completo"><svg class="icon icon-copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3.5A1.5 1.5 0 0 1 8.5 2h5A1.5 1.5 0 0 1 15 3.5v10A1.5 1.5 0 0 1 13.5 15h-5A1.5 1.5 0 0 1 7 13.5v-10Zm-1.5 0a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h5a3 3 0 0 0 3-3V6.5a.75.75 0 0 0-1.5 0v10a1.5 1.5 0 0 1-1.5 1.5h-5a1.5 1.5 0 0 1-1.5-1.5v-10a1.5 1.5 0 0 1 1.5-1.5H7a.75.75 0 0 0 0-1.5H5.5Z" /></svg><svg class="icon icon-check" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.052-.143Z" clip-rule="evenodd" /></svg></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="data-section">
+                            <h4 class="data-section-title">Dirección de Envío</h4>
+                            <div class="data-section-grid">
+                                <div class="field full-width">
+                                    <label for="data-field-direccion">Dirección</label>
+                                    <div class="input-group">
+                                        <input type="text" id="data-field-direccion" readonly placeholder="Dirección">
+                                        <button class="action-btn copy-btn" data-target="data-field-direccion" aria-label="Copiar Dirección"><svg class="icon icon-copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3.5A1.5 1.5 0 0 1 8.5 2h5A1.5 1.5 0 0 1 15 3.5v10A1.5 1.5 0 0 1 13.5 15h-5A1.5 1.5 0 0 1 7 13.5v-10Zm-1.5 0a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h5a3 3 0 0 0 3-3V6.5a.75.75 0 0 0-1.5 0v10a1.5 1.5 0 0 1-1.5 1.5h-5a1.5 1.5 0 0 1-1.5-1.5v-10a1.5 1.5 0 0 1 1.5-1.5H7a.75.75 0 0 0 0-1.5H5.5Z" /></svg><svg class="icon icon-check" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.052-.143Z" clip-rule="evenodd" /></svg></button>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label for="data-field-numero">Número Exterior</label>
+                                    <div class="input-group">
+                                        <input type="text" id="data-field-numero" readonly placeholder="Número Exterior">
+                                        <button class="action-btn copy-btn" data-target="data-field-numero" aria-label="Copiar Número Exterior"><svg class="icon icon-copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3.5A1.5 1.5 0 0 1 8.5 2h5A1.5 1.5 0 0 1 15 3.5v10A1.5 1.5 0 0 1 13.5 15h-5A1.5 1.5 0 0 1 7 13.5v-10Zm-1.5 0a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h5a3 3 0 0 0 3-3V6.5a.75.75 0 0 0-1.5 0v10a1.5 1.5 0 0 1-1.5 1.5h-5a1.5 1.5 0 0 1-1.5-1.5v-10a1.5 1.5 0 0 1 1.5-1.5H7a.75.75 0 0 0 0-1.5H5.5Z" /></svg><svg class="icon icon-check" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.052-.143Z" clip-rule="evenodd" /></svg></button>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label for="data-field-ciudad">Ciudad</label>
+                                    <div class="input-group">
+                                        <input type="text" id="data-field-ciudad" readonly placeholder="Ciudad">
+                                        <button class="action-btn copy-btn" data-target="data-field-ciudad" aria-label="Copiar Ciudad"><svg class="icon icon-copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3.5A1.5 1.5 0 0 1 8.5 2h5A1.5 1.5 0 0 1 15 3.5v10A1.5 1.5 0 0 1 13.5 15h-5A1.5 1.5 0 0 1 7 13.5v-10Zm-1.5 0a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h5a3 3 0 0 0 3-3V6.5a.75.75 0 0 0-1.5 0v10a1.5 1.5 0 0 1-1.5 1.5h-5a1.5 1.5 0 0 1-1.5-1.5v-10a1.5 1.5 0 0 1 1.5-1.5H7a.75.75 0 0 0 0-1.5H5.5Z" /></svg><svg class="icon icon-check" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.052-.143Z" clip-rule="evenodd" /></svg></button>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label for="data-field-estado">Estado/Provincia</label>
+                                    <div class="input-group">
+                                        <input type="text" id="data-field-estado" readonly placeholder="Estado/Provincia">
+                                        <button class="action-btn copy-btn" data-target="data-field-estado" aria-label="Copiar Estado/Provincia"><svg class="icon icon-copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3.5A1.5 1.5 0 0 1 8.5 2h5A1.5 1.5 0 0 1 15 3.5v10A1.5 1.5 0 0 1 13.5 15h-5A1.5 1.5 0 0 1 7 13.5v-10Zm-1.5 0a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h5a3 3 0 0 0 3-3V6.5a.75.75 0 0 0-1.5 0v10a1.5 1.5 0 0 1-1.5 1.5h-5a1.5 1.5 0 0 1-1.5-1.5v-10a1.5 1.5 0 0 1 1.5-1.5H7a.75.75 0 0 0 0-1.5H5.5Z" /></svg><svg class="icon icon-check" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.052-.143Z" clip-rule="evenodd" /></svg></button>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label for="data-field-cp">Código Postal</label>
+                                    <div class="input-group">
+                                        <input type="text" id="data-field-cp" readonly placeholder="Código Postal">
+                                        <button class="action-btn copy-btn" data-target="data-field-cp" aria-label="Copiar Código Postal"><svg class="icon icon-copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3.5A1.5 1.5 0 0 1 8.5 2h5A1.5 1.5 0 0 1 15 3.5v10A1.5 1.5 0 0 1 13.5 15h-5A1.5 1.5 0 0 1 7 13.5v-10Zm-1.5 0a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h5a3 3 0 0 0 3-3V6.5a.75.75 0 0 0-1.5 0v10a1.5 1.5 0 0 1-1.5 1.5h-5a1.5 1.5 0 0 1-1.5-1.5v-10a1.5 1.5 0 0 1 1.5-1.5H7a.75.75 0 0 0 0-1.5H5.5Z" /></svg><svg class="icon icon-check" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.052-.143Z" clip-rule="evenodd" /></svg></button>
+                                    </div>
+                                </div>
+                                <div class="field full-width">
+                                    <label for="data-field-pais">País</label>
+                                    <div class="input-group">
+                                        <input type="text" id="data-field-pais" readonly placeholder="País">
+                                        <button class="action-btn copy-btn" data-target="data-field-pais" aria-label="Copiar País"><svg class="icon icon-copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3.5A1.5 1.5 0 0 1 8.5 2h5A1.5 1.5 0 0 1 15 3.5v10A1.5 1.5 0 0 1 13.5 15h-5A1.5 1.5 0 0 1 7 13.5v-10Zm-1.5 0a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h5a3 3 0 0 0 3-3V6.5a.75.75 0 0 0-1.5 0v10a1.5 1.5 0 0 1-1.5 1.5h-5a1.5 1.5 0 0 1-1.5-1.5v-10a1.5 1.5 0 0 1 1.5-1.5H7a.75.75 0 0 0 0-1.5H5.5Z" /></svg><svg class="icon icon-check" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.052-.143Z" clip-rule="evenodd" /></svg></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="data-section">
+                            <h4 class="data-section-title">Documento de Identidad</h4>
+                            <div class="data-section-grid">
+                                <div class="field">
+                                    <label for="data-field-tipo-doc">Tipo de Documento</label>
+                                    <div class="input-group">
+                                        <input type="text" id="data-field-tipo-doc" readonly placeholder="Tipo de Documento">
+                                        <button class="action-btn copy-btn" data-target="data-field-tipo-doc" aria-label="Copiar Tipo de Documento"><svg class="icon icon-copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3.5A1.5 1.5 0 0 1 8.5 2h5A1.5 1.5 0 0 1 15 3.5v10A1.5 1.5 0 0 1 13.5 15h-5A1.5 1.5 0 0 1 7 13.5v-10Zm-1.5 0a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h5a3 3 0 0 0 3-3V6.5a.75.75 0 0 0-1.5 0v10a1.5 1.5 0 0 1-1.5 1.5h-5a1.5 1.5 0 0 1-1.5-1.5v-10a1.5 1.5 0 0 1 1.5-1.5H7a.75.75 0 0 0 0-1.5H5.5Z" /></svg><svg class="icon icon-check" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.052-.143Z" clip-rule="evenodd" /></svg></button>
+                                    </div>
+                                </div>
+                                <div class="field">
+                                    <label for="data-field-num-doc">Número de Documento</label>
+                                    <div class="input-group">
+                                        <input type="text" id="data-field-num-doc" readonly placeholder="Número de Documento">
+                                        <button class="action-btn copy-btn" data-target="data-field-num-doc" aria-label="Copiar Número de Documento"><svg class="icon icon-copy" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3.5A1.5 1.5 0 0 1 8.5 2h5A1.5 1.5 0 0 1 15 3.5v10A1.5 1.5 0 0 1 13.5 15h-5A1.5 1.5 0 0 1 7 13.5v-10Zm-1.5 0a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h5a3 3 0 0 0 3-3V6.5a.75.75 0 0 0-1.5 0v10a1.5 1.5 0 0 1-1.5 1.5h-5a1.5 1.5 0 0 1-1.5-1.5v-10a1.5 1.5 0 0 1 1.5-1.5H7a.75.75 0 0 0 0-1.5H5.5Z" /></svg><svg class="icon icon-check" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.052-.143Z" clip-rule="evenodd" /></svg></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="history-view" class="view-wrapper hidden">
+            <div class="card">
+                <div class="saved-bins-header">
+                    <h2 class="card-title" id="saved-bins-title">BINs Guardados</h2>
+                    <button id="toggle-trash-view-btn" class="btn-text" data-active-text="Ver Papelera" data-trashed-text="Ver Bins Guardados">Ver Papelera</button>
+                </div>
+                
+                <div id="active-bins-view">
+                    <div class="history-controls">
+                        <div class="field">
+                            <input type="search" id="search-bins-input" placeholder="Buscar por nombre o BIN...">
+                        </div>
+                        <div class="field">
+                            <select id="sort-bins-select">
+                                <option value="date_desc">Más Recientes</option>
+                                <option value="date_asc">Más Antiguos</option>
+                                <option value="name_asc">Nombre (A-Z)</option>
+                                <option value="name_desc">Nombre (Z-A)</option>
+                                <option value="favorite_desc">Favoritos Primero</option>
+                            </select>
+                        </div>
+                    </div>
+                    <hr class="divider">
+                    <div id="saved-bins-list-container">
+                        <ul id="saved-bins-list"></ul>
+                        <p class="bins-empty-state hidden">No has guardado ningún BIN.</p>
+                    </div>
+                </div>
+
+                <div id="trashed-bins-view" class="hidden">
+                    <p class="card-description">Los Bins en la papelera se eliminarán permanentemente después de 30 días.</p>
+                     <hr class="divider">
+                    <div id="trashed-bins-list-container">
+                        <ul id="trashed-bins-list"></ul>
+                        <p class="bins-empty-state hidden">La papelera está vacía.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- Modal for saving/editing BINs -->
+    <div id="save-bin-modal" class="modal-overlay hidden">
+        <div class="modal-content card">
+            <h2 id="modal-title" class="card-title">Guardar BIN</h2>
+            <p id="modal-description" class="card-description">Dale un nombre a este BIN para encontrarlo fácilmente.</p>
+            
+            <input type="hidden" id="modal-edit-id">
+
+            <div class="field">
+                <label for="modal-bin-name">Nombre</label>
+                <input type="text" id="modal-bin-name" placeholder="Ej: Tarjeta de prueba">
+            </div>
+            <div class="field">
+                <label for="modal-bin-number">Número/Patrón de BIN</label>
+                <input type="text" id="modal-bin-number" readonly>
+            </div>
+            <div id="modal-error-container"></div>
+            
+            <div class="form-row">
+                <button id="modal-cancel-btn" class="btn btn-secondary">Cancelar</button>
+                <button id="modal-save-btn" class="btn">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="module" src="index.tsx"></script>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
