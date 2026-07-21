@@ -13,7 +13,16 @@
     </div>
 
     <section class="herramienta">
-        <h1 class="titulo" id="app-title">Generador de Tarjetas</h1>
+        <header class="app-header">
+            <h1 class="titulo" id="app-title">Generador de Tarjetas</h1>
+            <button id="mobile-menu-toggle" class="mobile-menu-toggle" type="button" aria-expanded="false" aria-controls="primary-navigation" aria-label="Abrir menú">
+                <span class="menu-icon" aria-hidden="true"><span></span><span></span><span></span></span>
+                <span class="menu-text">Menú</span>
+            </button>
+        </header>
+
+        <div id="primary-navigation" class="primary-navigation">
+        <span class="nav-section-label">Apariencia</span>
 
         <div class="theme-switcher">
             <button id="btn-day" class="theme-btn" data-theme="day" aria-pressed="false" aria-label="Modo Día">
@@ -38,14 +47,19 @@
             <span class="shortcut-hint" aria-label="Atajos disponibles">Atajos: Alt+G, Alt+V, Alt+L · Ctrl+Enter</span>
         </div>
         
+        <span class="nav-section-label">Herramientas</span>
         <div class="mode-switcher" role="navigation" aria-label="Herramientas">
+            <span class="mode-group-label">Crear</span>
             <button id="mode-generator-btn" class="mode-btn active" aria-controls="generator-view" aria-current="page">Generador</button>
-            <button id="mode-validator-btn" class="mode-btn" aria-controls="validator-view">Validador</button>
             <button id="mode-batch-btn" class="mode-btn" aria-controls="batch-view">Lotes</button>
-            <button id="mode-extrapolator-btn" class="mode-btn" aria-controls="extrapolator-view">Extrapolador</button>
-            <button id="mode-method1-btn" class="mode-btn" aria-controls="method1-view">Método 1</button>
             <button id="mode-data-btn" class="mode-btn" aria-controls="data-view">Datos</button>
-            <button id="mode-history-btn" class="mode-btn" aria-controls="history-view">BINs Guardados</button>
+            <span class="mode-group-label">Analizar</span>
+            <button id="mode-validator-btn" class="mode-btn" aria-controls="validator-view">Validador</button>
+            <button id="mode-extrapolator-btn" class="mode-btn" aria-controls="extrapolator-view">Comparar</button>
+            <button id="mode-method1-btn" class="mode-btn" aria-controls="method1-view">Patrones</button>
+            <span class="mode-group-label">Biblioteca</span>
+            <button id="mode-history-btn" class="mode-btn" aria-controls="history-view">Guardados</button>
+        </div>
         </div>
 
         <div id="generator-view" class="view-wrapper">

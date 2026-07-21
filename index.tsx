@@ -55,6 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupMotionPreference();
     setupControls();
     setupViewSwitcher();
+    setupMobileNavigation();
     setupCopyButtons();
     setupDelegatedListeners();
     setupValidator();
@@ -126,6 +127,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // --- FEATURE MODULES ---
+
+function setupMobileNavigation() {
+    const toggle = document.getElementById('mobile-menu-toggle') as HTMLButtonElement | null;
+    const navigation = document.getElementById('primary-navigation') as HTMLElement | null;
+    const header = document.querySelector('.app-header') as HTMLElement | null;
+    if (!toggle || !navigation || !header) return;
+
+    const mobileQuery = window.matchMedia('(max-width: 600px)');
+    const setOpen = (open: boolean, restoreFocus = false) => {
+        navigation.classList.toggle('is-open', open);
+        toggle.classList.toggle('is-open', open);
+        toggle.setAttribute('aria-expanded', String(open));
+        toggle.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+        toggle.querySelector('.menu-text')!.textContent = open ? 'Cerrar' : 'Menú';
+        if (open) navigation.querySelector<HTMLButtonElement>('button')?.focus();
+        else if (restoreFocus) toggle.focus();
+    };
+
+    toggle.addEventListener('click', () => {
+        setOpen(!navigation.classList.contains('is-open'));
+    });
+
+    navigation.querySelectorAll('.mode-btn, .theme-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            if (mobileQuery.matches) setOpen(false, true);
+        });
+    });
+
+    document.addEventListener('click', event => {
+        if (!mobileQuery.matches || !navigation.classList.contains('is-open')) return;
+        const target = event.target as Node;
+        if (!navigation.contains(target) && !header.contains(target)) setOpen(false);
+    });
+
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && navigation.classList.contains('is-open')) {
+            setOpen(false, true);
+        }
+    });
+
+    mobileQuery.addEventListener('change', event => {
+        if (!event.matches) setOpen(false);
+    });
+}
 
 function setupMotionPreference() {
     const toggle = document.getElementById('reduce-motion-toggle') as HTMLInputElement | null;
@@ -301,8 +346,8 @@ function setupViewSwitcher() {
     generatorBtn?.addEventListener('click', () => switchView(generatorView, "Generador de Tarjetas", generatorBtn));
     validatorBtn?.addEventListener('click', () => switchView(validatorView, "Validador", validatorBtn));
     batchBtn?.addEventListener('click', () => switchView(batchView, "Generación por Lotes", batchBtn));
-    extrapolatorBtn?.addEventListener('click', () => switchView(extrapolatorView, "Extrapolador", extrapolatorBtn));
-    method1Btn?.addEventListener('click', () => switchView(method1View, "Método: Extrapolaciones", method1Btn));
+    extrapolatorBtn?.addEventListener('click', () => switchView(extrapolatorView, "Comparar patrones", extrapolatorBtn));
+    method1Btn?.addEventListener('click', () => switchView(method1View, "Generar patrones", method1Btn));
     dataBtn?.addEventListener('click', () => switchView(dataView, "Generador de Datos", dataBtn));
     historyBtn?.addEventListener('click', () => switchView(historyView, "BINs Guardados", historyBtn));
 }
