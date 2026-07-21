@@ -7,6 +7,7 @@ const __dirname = path.dirname(__filename);
 
 export default defineConfig(() => {
   return {
+    base: '/la-mejor-vercion-de-ccs-gen/',
     server: {
       port: 3000,
       host: '0.0.0.0',

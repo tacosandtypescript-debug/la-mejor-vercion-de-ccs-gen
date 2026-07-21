@@ -1,5 +1,7 @@
 # Herramientas de Tarjetas
 
+[Abrir la aplicación](https://tacosandtypescript-debug.github.io/la-mejor-vercion-de-ccs-gen/)
+
 Aplicación web local para generar datos sintéticos de tarjetas destinados a desarrollo, demostraciones y pruebas de interfaces. Funciona en el navegador y no requiere servicios de inteligencia artificial ni claves de API.
 
 ## Funciones
