@@ -9,11 +9,15 @@ import * as binStore from './bins/store';
 import { BinEntry } from './bins/types';
 import { renderBinsList, setUseInGeneratorCallback, setEditBinCallback, renderTrashedBinsList } from './components/renderBins';
 import {
-    calculateLuhn,
+    compareCardNumbers,
+    generateCardNumberFromPattern,
+    generateExtrapolationPatterns,
     generateSyntheticBatch,
+    generateValidExpiry,
     serializeBatch,
     validateBatchOptions,
     validateCardNumber,
+    validateExpiryInputs,
 } from './utils/cardTools.js';
 
 type Theme = 'day' | 'night' | 'sparkle';
@@ -699,34 +703,10 @@ function setupGenerator(prefix: string = '') {
             return;
         }
 
-        // Validación de Mes
-        if (monthValue) {
-            const monthNum = parseInt(monthValue, 10);
-            if (isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
-                fail(monthInput, "Usa un mes entre 1 y 12.");
-                return;
-            }
-        }
-        
-        // Validación de Año
-        let processedYear = yearValue;
-        if (yearValue) {
-            let yearNum = parseInt(yearValue, 10);
-            if (isNaN(yearNum)) {
-                fail(yearInput, "Usa un año numérico, por ejemplo 2027.");
-                return;
-            }
-            // Manejar formato corto yy -> 20yy
-            if (yearValue.length <= 2) {
-                yearNum += 2000;
-            }
-
-            const currentYear = new Date().getFullYear();
-            if (yearNum < currentYear || yearNum > currentYear + 30) {
-                fail(yearInput, `El año debe estar entre ${currentYear} y ${currentYear + 30}.`);
-                return;
-            }
-            processedYear = String(yearNum);
+        const expiryValidation = validateExpiryInputs(monthValue, yearValue);
+        if (!expiryValidation.isValid) {
+            fail(expiryValidation.field === 'month' ? monthInput : yearInput, expiryValidation.message);
+            return;
         }
 
         const quantity = Number(quantityInput.value);
@@ -745,39 +725,25 @@ function setupGenerator(prefix: string = '') {
         const targetLength = isAmex ? 15 : 16;
         
         const config = {
-            month: monthInput.value,
-            year: processedYear,
+            month: expiryValidation.month,
+            year: expiryValidation.year,
             cvv: cvvInput.value,
             quantity
         };
 
-        const results = Array.from({ length: config.quantity }, () => {
-            const prefixLength = targetLength - 1;
-            
-            let tempPattern = pattern;
-            if (tempPattern.length > prefixLength) {
-                tempPattern = tempPattern.substring(0, prefixLength);
-            } else {
-                tempPattern = tempPattern.padEnd(prefixLength, 'x');
-            }
-
-            let generatedPrefix = '';
-            for (const char of tempPattern) {
-                generatedPrefix += (char.toLowerCase() === 'x') ? Math.floor(Math.random() * 10) : char;
-            }
-            const luhnDigit = calculateLuhn(generatedPrefix);
-            const number = generatedPrefix + luhnDigit;
-
-            const finalMonth = config.month 
-                ? String(parseInt(config.month, 10)).padStart(2, '0') 
-                : String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
-
-            const finalYearForGen = config.year || String(new Date().getFullYear() + Math.floor(Math.random() * 5));
-            
-            const cvvLength = isAmex ? 4 : 3;
-            const finalCvv = config.cvv || String(Math.floor(Math.random() * (10 ** cvvLength))).padStart(cvvLength, '0');
-            return `${number}|${finalMonth}|${finalYearForGen}|${finalCvv}`;
-        });
+        let results: string[];
+        try {
+            results = Array.from({ length: config.quantity }, () => {
+                const number = generateCardNumberFromPattern(pattern, targetLength);
+                const expiry = generateValidExpiry({ month: config.month, year: config.year });
+                const cvvLength = isAmex ? 4 : 3;
+                const finalCvv = config.cvv || String(Math.floor(Math.random() * (10 ** cvvLength))).padStart(cvvLength, '0');
+                return `${number}|${expiry.month}|${expiry.year}|${finalCvv}`;
+            });
+        } catch (error) {
+            fail(binInput, error instanceof Error ? error.message : 'No se pudo generar el resultado.');
+            return;
+        }
 
         resultsArea.value = results.join('\n');
         setFieldMessage(binInput, `${results.length} resultados generados correctamente.`, 'success');
@@ -859,24 +825,34 @@ function setupExtrapolator() {
     const useSimResultBtn = document.getElementById('use-sim-result-btn') as HTMLButtonElement;
 
     simBtn?.addEventListener('click', () => {
-        const cc1 = simCc1.value;
-        const cc2 = simCc2.value;
-        if (cc1.length < 15 || cc2.length < 15 || cc1.length !== cc2.length) {
-            showError("Las tarjetas deben tener la misma longitud (15 o 16 dígitos).", 'ext-');
+        clearFieldMessage(simCc1);
+        clearFieldMessage(simCc2);
+        const comparison = compareCardNumbers(simCc1.value, simCc2.value);
+        if (!comparison.isValid) {
+            const invalidInput = comparison.field === 'first' ? simCc1 : simCc2;
+            setFieldMessage(invalidInput, comparison.message, 'error');
+            invalidInput.focus();
+            simResult.value = '';
+            useSimResultBtn.classList.add('hidden');
             return;
         }
-        let result = '';
-        for (let i = 0; i < cc1.length; i++) {
-            result += (cc1[i] === cc2[i]) ? cc1[i] : 'x';
-        }
-        simResult.value = result;
+
+        simResult.value = comparison.pattern;
+        setFieldMessage(simCc2, 'Comparación completada: ambos números son válidos y comparten BIN.', 'success');
         useSimResultBtn.classList.remove('hidden');
     });
+
+    [simCc1, simCc2].forEach(input => input.addEventListener('input', () => {
+        clearFieldMessage(input);
+        simResult.value = '';
+        useSimResultBtn.classList.add('hidden');
+    }));
 
     useSimResultBtn?.addEventListener('click', () => {
         const mainBinInput = document.getElementById('bin') as HTMLInputElement;
         if (mainBinInput) {
             mainBinInput.value = simResult.value;
+            mainBinInput.dispatchEvent(new Event('input', { bubbles: true }));
             document.getElementById('mode-generator-btn')?.click();
         }
     });
@@ -886,18 +862,22 @@ function setupExtrapolator() {
     const posResult = document.getElementById('pos-result') as HTMLTextAreaElement;
 
     posBtn?.addEventListener('click', () => {
-        const fullCard = posCc.value.split('|')[0].replace(/\D/g, '');
-        if (fullCard.length < 15) {
-            showError("La tarjeta debe tener al menos 15 dígitos.", 'm1-');
+        clearFieldMessage(posCc);
+        const extrapolation = generateExtrapolationPatterns(posCc.value);
+        if (!extrapolation.isValid) {
+            setFieldMessage(posCc, extrapolation.message, 'error');
+            posCc.focus();
+            posResult.value = '';
             return;
         }
-        const patterns = [
-            fullCard.substring(0, 12) + 'xxxx',
-            fullCard.substring(0, 10) + 'xxxxxx',
-            fullCard.substring(0, 8) + 'xxxxxxxx',
-            fullCard.substring(0, 6) + 'xxxxxxxxxx',
-        ].filter(p => p.length === fullCard.length);
-        posResult.value = patterns.join('\n');
+
+        posResult.value = extrapolation.patterns.join('\n');
+        setFieldMessage(posCc, `${extrapolation.patterns.length} patrones válidos generados.`, 'success');
+    });
+
+    posCc?.addEventListener('input', () => {
+        clearFieldMessage(posCc);
+        posResult.value = '';
     });
 }
 
